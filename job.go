@@ -15,8 +15,9 @@
 package realis
 
 import (
-	"github.com/rdelval/gorealis/gen-go/apache/aurora"
 	"strconv"
+
+	"github.com/rdelval/gorealis/gen-go/apache/aurora"
 )
 
 type Job interface {
@@ -25,8 +26,8 @@ type Job interface {
 	Role(role string) Job
 	Name(name string) Job
 	CPU(cpus float64) Job
-    CronSchedule(cron string) Job
-    CronCollisionPolicy(policy aurora.CronCollisionPolicy) Job
+	CronSchedule(cron string) Job
+	CronCollisionPolicy(policy aurora.CronCollisionPolicy) Job
 	Disk(disk int64) Job
 	RAM(ram int64) Job
 	ExecutorName(name string) Job
@@ -81,6 +82,46 @@ func NewJob() Job {
 	resources["cpu"] = numCpus
 	resources["ram"] = ramMb
 	resources["disk"] = diskMb
+
+	taskConfig.Resources = make(map[*aurora.Resource]bool)
+	taskConfig.Resources[numCpus] = true
+	taskConfig.Resources[ramMb] = true
+	taskConfig.Resources[diskMb] = true
+
+	return AuroraJob{jobConfig, resources, 0}
+}
+
+// Create a Job object with everything initialized.
+func NewJobContaier(container, image string) Job {
+	jobConfig := aurora.NewJobConfiguration()
+	taskConfig := aurora.NewTaskConfig()
+	jobKey := aurora.NewJobKey()
+
+	//Job Config
+	jobConfig.Key = jobKey
+	jobConfig.TaskConfig = taskConfig
+
+	//Task Config
+	taskConfig.Job = jobKey
+	//taskConfig.Container = aurora.NewContainer()
+	// taskConfig.Container.Mesos = aurora.NewMesosContainer()
+	taskConfig.ExecutorConfig = aurora.NewExecutorConfig()
+	taskConfig.MesosFetcherUris = make(map[*aurora.MesosFetcherURI]bool)
+	taskConfig.Metadata = make(map[*aurora.Metadata]bool)
+	taskConfig.Constraints = make(map[*aurora.Constraint]bool)
+
+	//Resources
+	numCpus := aurora.NewResource()
+	ramMb := aurora.NewResource()
+	diskMb := aurora.NewResource()
+
+	resources := make(map[string]*aurora.Resource)
+	resources["cpu"] = numCpus
+	resources["ram"] = ramMb
+	resources["disk"] = diskMb
+
+	//Container
+	taskConfig.Container = &aurora.Container{Docker: &aurora.DockerContainer{Image: image}}
 
 	taskConfig.Resources = make(map[*aurora.Resource]bool)
 	taskConfig.Resources[numCpus] = true

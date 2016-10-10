@@ -17,11 +17,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"os"
+
 	"github.com/rdelval/gorealis"
 	"github.com/rdelval/gorealis/gen-go/apache/aurora"
 	"github.com/rdelval/gorealis/response"
-	"io/ioutil"
-	"os"
 )
 
 func main() {
@@ -79,10 +80,10 @@ func main() {
 			os.Exit(1)
 		}
 
-		job = realis.NewJob().
+		job = realis.NewJobContaier("Docker", "python:2.7").
 			Environment("prod").
 			Role("vagrant").
-			Name("hello_world_from_gorealis").
+			Name("hello_world_from_gorealis_container").
 			ExecutorName(aurora.AURORA_EXECUTOR_NAME).
 			ExecutorData(string(payload)).
 			CPU(1).
